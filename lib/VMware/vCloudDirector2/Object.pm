@@ -238,7 +238,7 @@ generate an exception.  See L<VMware::vCloudDirector2::API/DELETE>.
 
 =cut
 
-method DELETE () { return $self->object->api->DELETE( $self->href ); }
+method DELETE () { return $self->api->DELETE( $self->href ); }
 
 =head3 GET
 
@@ -247,7 +247,7 @@ generate an exception.  See L<VMware::vCloudDirector2::API/GET>.
 
 =cut
 
-method GET () { return $self->object->api->GET( $self->href ); }
+method GET () { return $self->api->GET( $self->href ); }
 
 =head3 POST
 
@@ -257,7 +257,7 @@ L<VMware::vCloudDirector2::API/POST>.
 
 =cut
 
-method POST ($hash) { return $self->object->api->POST( $self->href, $hash, $self->mime_type ); }
+method POST ($hash) { return $self->api->POST( $self->href, $hash, $self->mime_type ); }
 
 =head3 PUT
 
@@ -267,7 +267,7 @@ L<VMware::vCloudDirector2::API/PUT>.
 
 =cut
 
-method PUT ($hash) { return $self->object->api->PUT( $self->href, $hash, $self->mime_type ); }
+method PUT ($hash) { return $self->api->PUT( $self->href, $hash, $self->mime_type ); }
 
 # ------------------------------------------------------------------------
 method _listify ($thing) { !defined $thing ? () : ( ( ref $thing eq 'ARRAY' ) ? @{$thing} : $thing ) }
