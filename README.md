@@ -1,3 +1,10 @@
+[![Build Status](https://travis-ci.org/Perl-VMware/VMware-vCloudDirector2.svg?branch=master)](https://travis-ci.org/Perl-VMware/VMware-vCloudDirector2)
+[![Kwalitee status](http://cpants.cpanauthors.org/dist/VMware-vCloudDirector2.png)](http://cpants.charsbar.org/dist/overview/VMware-vCloudDirector2)
+[![GitHub issues](https://img.shields.io/github/issues/Perl-VMware/VMware-vCloudDirector2.svg)](https://github.com/Perl-VMware/VMware-vCloudDirector2/issues)
+[![GitHub tag](https://img.shields.io/github/tag/Perl-VMware/VMware-vCloudDirector2.svg)]()
+[![Cpan license](https://img.shields.io/cpan/l/VMware-vCloudDirector2.svg)](https://metacpan.org/release/VMware-vCloudDirector2)
+[![Cpan version](https://img.shields.io/cpan/v/VMware-vCloudDirector2.svg)](https://metacpan.org/release/VMware-vCloudDirector2)
+
 # NAME
 
 VMware::vCloudDirector2 - Interface to VMWare vCloud Directory REST API

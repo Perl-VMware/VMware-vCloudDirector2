@@ -1,6 +1,8 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+
+0.100     2019-09-05 16:12:29+01:00 Europe/London
     - Converted to JSON API - quite a lot of internal hash structure
       changes due to this.
     - Partially converted test suite (incomplete)
