@@ -66,6 +66,7 @@ has _partial_object => ( is => 'rw', isa => 'Bool', default => 0 );
 method hash () { return $self->inflate->content->hash; }
 method links () { return $self->inflate->content->links; }
 method id () { return $self->inflate->content->id; }
+method uuid () { return ( split( /\//, $self->href ) )[-1]; }
 
 # ------------------------------------------------------------------------
 method BUILD ($args) {
@@ -176,8 +177,8 @@ method _create_object ($hash, $type='Thing') {
     # if thing has Link content within it then it is a full object, otherwise it
     # is just a stub
     my $object = VMware::vCloudDirector::Object->new(
-        hash => { $type => $hash },
-        api  => $self->api,
+        hash            => { $type => $hash },
+        api             => $self->api,
         _partial_object => ( exists( $hash->{Link} ) ) ? 0 : 1,
     );
     $self->api->_debug(
