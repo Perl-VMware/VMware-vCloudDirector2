@@ -4,7 +4,7 @@ use Test::Exception;
 use Test::LWP::UserAgent;
 use FindBin;
 use Path::Tiny;
-use VMware::vCloudDirector;
+use VMware::vCloudDirector2;
 
 FindBin->again;
 my $datadir = path("$FindBin::Bin/data");
@@ -71,7 +71,7 @@ foreach (@responses) {
 #
 # Actual Tests!
 
-my $vcd = new_ok 'VMware::vCloudDirector' => [ %args, _ua => $useragent ];
+my $vcd = new_ok 'VMware::vCloudDirector2' => [ %args, _ua => $useragent ];
 is( $vcd->api->api_version => '5.6', 'API version seen and is version 5.6' );
 
 #
@@ -79,27 +79,27 @@ is( $vcd->api->api_version => '5.6', 'API version seen and is version 5.6' );
 ok( not( $vcd->api->has_authorization_token ), 'Session token not set' );
 my $session;
 lives_ok( sub { $session = $vcd->api->login }, 'Login did not die' );
-isa_ok( $session, 'VMware::vCloudDirector::Object', 'Got an object back from login' );
+isa_ok( $session, 'VMware::vCloudDirector2::Object', 'Got an object back from login' );
 is( $session->type, 'session', 'The object is a session' );
-isa_ok( $vcd->api->current_session, 'VMware::vCloudDirector::Object', 'Session object now set' );
+isa_ok( $vcd->api->current_session, 'VMware::vCloudDirector2::Object', 'Session object now set' );
 ok( $vcd->api->has_authorization_token, 'Session token is now set' );
 is( $vcd->api->authorization_token => $authcookie, 'Session token seen and matches' );
 #
 # Org list and grab Example Org
 my @org_list = $vcd->org_list;
-isa_ok( $org_list[0], 'VMware::vCloudDirector::Object', 'Org list object is the right type' );
+isa_ok( $org_list[0], 'VMware::vCloudDirector2::Object', 'Org list object is the right type' );
 is( $org_list[0]->type, 'org', 'Org list object is an Org object' );
 ok( ( scalar(@org_list) > 1 ), 'Org list has multiple entries (needed for System)' );
 my ($ex_org) = $vcd->org_grep( sub { $_->name eq 'Example' } );
 ok( defined($ex_org), 'Example org has been found' );
-isa_ok( $ex_org, 'VMware::vCloudDirector::Object', 'Example org object is the right type' );
+isa_ok( $ex_org, 'VMware::vCloudDirector2::Object', 'Example org object is the right type' );
 is( $ex_org->type, 'org', 'Example org object is an Org object' );
 #
 # VDCs
 my @vdc_objects = $ex_org->fetch_links( rel => 'down', type => 'vdc' );
 is( scalar(@vdc_objects), 1, 'One VDC seen' );
 my $vdc_obj = $vdc_objects[0];
-isa_ok( $vdc_obj, 'VMware::vCloudDirector::Object', 'Example VDC object is the right type' );
+isa_ok( $vdc_obj, 'VMware::vCloudDirector2::Object', 'Example VDC object is the right type' );
 is( $vdc_obj->type, 'vdc', 'Example VDC object is an VDC object' );
 is( $vdc_obj->name, 'Example Working VDC', 'Example VDC object has correct name' );
 #

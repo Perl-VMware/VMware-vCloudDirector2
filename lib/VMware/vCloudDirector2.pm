@@ -1,4 +1,4 @@
-package VMware::vCloudDirector;
+package VMware::vCloudDirector2;
 
 # ABSTRACT: Interface to VMWare vCloud Directory REST API
 
@@ -12,9 +12,9 @@ use Moose;
 use Method::Signatures;
 use MooseX::Types::Path::Tiny qw/Path/;
 use Path::Tiny;
-use VMware::vCloudDirector::API;
-use VMware::vCloudDirector::Error;
-use VMware::vCloudDirector::Object;
+use VMware::vCloudDirector2::API;
+use VMware::vCloudDirector2::Error;
+use VMware::vCloudDirector2::Object;
 
 # ------------------------------------------------------------------------
 
@@ -34,9 +34,9 @@ as yet...
     # THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY
     # IT MAY CHANGE DRAMATICALLY OR EAT YOUR DATA.
 
-    use VMware::vCloudDirector
+    use VMware::vCloudDirector2
 
-    my $vcd = VMware::vCloudDirector->new(
+    my $vcd = VMware::vCloudDirector2->new(
         hostname   => $host,
         username   => $user,
         password   => $pass,
@@ -107,7 +107,7 @@ has _debug_trace_directory =>
 
 has api => (
     is      => 'ro',
-    isa     => 'VMware::vCloudDirector::API',
+    isa     => 'VMware::vCloudDirector2::API',
     lazy    => 1,
     builder => '_build_api'
 );
@@ -127,13 +127,13 @@ method _build_api () {
         if ( $self->_has_debug_trace_directory );
     push( @args, _ua => $self->_ua ) if ( $self->_has_ua );
 
-    return VMware::vCloudDirector::API->new(@args);
+    return VMware::vCloudDirector2::API->new(@args);
 }
 
 # ------------------------------------------------------------------------
 has org_listref => (
     is      => 'ro',
-    isa     => 'ArrayRef[VMware::vCloudDirector::Object]',
+    isa     => 'ArrayRef[VMware::vCloudDirector2::Object]',
     lazy    => 1,
     builder => '_build_org_listref',
     traits  => ['Array'],

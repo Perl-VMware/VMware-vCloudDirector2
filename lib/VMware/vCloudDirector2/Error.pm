@@ -1,4 +1,4 @@
-package VMware::vCloudDirector::Error;
+package VMware::vCloudDirector2::Error;
 
 # ABSTRACT: Throw errors with the best of them
 

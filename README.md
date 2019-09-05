@@ -1,26 +1,19 @@
-[![Build Status](https://travis-ci.org/Perl-VMware/perl-VMware-vCloudDirector.svg?branch=master)](https://travis-ci.org/Perl-VMware/perl-VMware-vCloudDirector)
-[![Kwalitee status](http://cpants.cpanauthors.org/dist/VMware-vCloudDirector.png)](http://cpants.charsbar.org/dist/overview/VMware-vCloudDirector)
-[![GitHub issues](https://img.shields.io/github/issues/Perl-VMware/perl-VMware-vCloudDirector.svg)](https://github.com/Perl-VMware/perl-VMware-vCloudDirector/issues)
-[![GitHub tag](https://img.shields.io/github/tag/Perl-VMware/perl-VMware-vCloudDirector.svg)]()
-[![Cpan license](https://img.shields.io/cpan/l/VMware-vCloudDirector.svg)](https://metacpan.org/release/VMware-vCloudDirector)
-[![Cpan version](https://img.shields.io/cpan/v/VMware-vCloudDirector.svg)](https://metacpan.org/release/VMware-vCloudDirector)
-
 # NAME
 
-VMware::vCloudDirector - Interface to VMWare vCloud Directory REST API
+VMware::vCloudDirector2 - Interface to VMWare vCloud Directory REST API
 
 # VERSION
 
-version 0.008
+version 0.004
 
 # SYNOPSIS
 
     # THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY
     # IT MAY CHANGE DRAMATICALLY OR EAT YOUR DATA.
 
-    use VMware::vCloudDirector
+    use VMware::vCloudDirector2
 
-    my $vcd = VMware::vCloudDirector->new(
+    my $vcd = VMware::vCloudDirector2->new(
         hostname   => $host,
         username   => $user,
         password   => $pass,
@@ -90,7 +83,7 @@ Nigel Metheringham <nigelm@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2017 by Nigel Metheringham.
+This software is copyright (c) 2019 by Nigel Metheringham.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

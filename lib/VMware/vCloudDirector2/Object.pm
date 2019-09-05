@@ -1,4 +1,4 @@
-package VMware::vCloudDirector::Object;
+package VMware::vCloudDirector2::Object;
 
 # ABSTRACT: Module to contain an object!
 
@@ -12,7 +12,7 @@ use Moose;
 use Method::Signatures;
 use Ref::Util qw(is_plain_hashref);
 use Lingua::EN::Inflexion;
-use VMware::vCloudDirector::ObjectContent;
+use VMware::vCloudDirector2::ObjectContent;
 
 # ------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ itself.
 
 =head3 hash
 
-A reference to the hash returned from the vCloud XML.  Forces object inflation.
+A reference to the hash returned from the vCloud API.  Forces object inflation.
 
 =head3 links
 
@@ -45,7 +45,7 @@ The id attribute from the returned vCloud XML.  Forces object inflation.
 
 has api => (
     is            => 'ro',
-    isa           => 'VMware::vCloudDirector::API',
+    isa           => 'VMware::vCloudDirector2::API',
     required      => 1,
     weak_ref      => 1,
     documentation => 'API we use'
@@ -53,7 +53,7 @@ has api => (
 
 has content => (
     is            => 'ro',
-    isa           => 'VMware::vCloudDirector::ObjectContent',
+    isa           => 'VMware::vCloudDirector2::ObjectContent',
     predicate     => 'has_content',
     writer        => '_set_content',
     documentation => 'The underlying content object',
@@ -72,7 +72,7 @@ method uuid () { return ( split( /\//, $self->href ) )[-1]; }
 method BUILD ($args) {
 
     $self->_set_content(
-        VMware::vCloudDirector::ObjectContent->new( object => $self, hash => $args->{hash} ) );
+        VMware::vCloudDirector2::ObjectContent->new( object => $self, hash => $args->{hash} ) );
 }
 
 # ------------------------------------------------------------------------
@@ -100,7 +100,7 @@ method inflate () {
 method refetch () {
     my $hash = $self->api->GET_hash( $self->href );
     $self->_set_content(
-        VMware::vCloudDirector::ObjectContent->new( object => $self, hash => $hash ) );
+        VMware::vCloudDirector2::ObjectContent->new( object => $self, hash => $hash ) );
     $self->api->_debug(
         sprintf(
             'Object: %s a [%s]',
@@ -176,7 +176,7 @@ method _create_object ($hash, $type='Thing') {
 
     # if thing has Link content within it then it is a full object, otherwise it
     # is just a stub
-    my $object = VMware::vCloudDirector::Object->new(
+    my $object = VMware::vCloudDirector2::Object->new(
         hash            => { $type => $hash },
         api             => $self->api,
         _partial_object => ( exists( $hash->{Link} ) ) ? 0 : 1,
@@ -234,7 +234,7 @@ method build_children_objects () {
 =head3 DELETE
 
 Make a delete request to the URL of this object.  Returns Objects.  Failure
-will generate an exception.  See L<VMware::vCloudDirector::API/DELETE>.
+will generate an exception.  See L<VMware::vCloudDirector2::API/DELETE>.
 
 =cut
 
@@ -243,7 +243,7 @@ method DELETE () { return $self->api->GET( $self->href ); }
 =head3 GET
 
 Make a get request to the URL of this object.  Returns Objects.  Failure will
-generate an exception.  See L<VMware::vCloudDirector::API/GET>.
+generate an exception.  See L<VMware::vCloudDirector2::API/GET>.
 
 =cut
 
@@ -253,7 +253,7 @@ method GET () { return $self->api->GET( $self->href ); }
 
 Make a post request with the specified payload to the URL of this object.
 Returns Objects.  Failure will generate an exception.  See
-L<VMware::vCloudDirector::API/POST>.
+L<VMware::vCloudDirector2::API/POST>.
 
 =cut
 
@@ -263,7 +263,7 @@ method POST ($xml_hash) { return $self->api->GET( $self->href, $xml_hash ); }
 
 Make a put request with the specified payload to the URL of this object.
 Returns Objects.  Failure will generate an exception.  See
-L<VMware::vCloudDirector::API/PUT>.
+L<VMware::vCloudDirector2::API/PUT>.
 
 =cut
 

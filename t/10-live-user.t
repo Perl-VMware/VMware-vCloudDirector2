@@ -1,7 +1,7 @@
 use strict;
 use Test::More;
 
-use VMware::vCloudDirector;
+use VMware::vCloudDirector2;
 
 # Check for connection info to run additonal tests
 our %ENV;
@@ -26,7 +26,7 @@ unless ( $host and $user and $pass and $org ) {
 }
 
 subtest 'Connection test with correct parameters' => sub {
-    my $vcd = new_ok 'VMware::vCloudDirector' => [
+    my $vcd = new_ok 'VMware::vCloudDirector2' => [
         hostname   => $host,
         username   => $user,
         password   => $pass,
@@ -35,12 +35,12 @@ subtest 'Connection test with correct parameters' => sub {
     ];
     ok( ( $vcd->api->api_version > 1.0 ), 'API version seen and more than 1.0' );
     my $session = $vcd->api->login;
-    isa_ok( $session, 'VMware::vCloudDirector::Object', 'Got an object back from login' );
+    isa_ok( $session, 'VMware::vCloudDirector2::Object', 'Got an object back from login' );
     is( $session->type, 'session', 'The object is a session' );
     my @org_list = $vcd->org_list;
     ok( ( scalar(@org_list) == 1 ), 'Org list has single item (expected for User)' );
     my $myorg = $org_list[0];
-    isa_ok( $myorg, 'VMware::vCloudDirector::Object', 'Org object is the right type' );
+    isa_ok( $myorg, 'VMware::vCloudDirector2::Object', 'Org object is the right type' );
     is( $myorg->type, 'org', 'Org object is an Org object' );
     is( $myorg->name, $org,  'Org object matches our Org' );
     done_testing();

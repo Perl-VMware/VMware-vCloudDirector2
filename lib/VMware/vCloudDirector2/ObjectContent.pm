@@ -1,4 +1,4 @@
-package VMware::vCloudDirector::ObjectContent;
+package VMware::vCloudDirector2::ObjectContent;
 
 # ABSTRACT: A vCloud Object content
 
@@ -13,13 +13,13 @@ use Method::Signatures;
 use MooseX::Types::URI qw(Uri);
 use Const::Fast;
 use Ref::Util qw(is_plain_hashref);
-use VMware::vCloudDirector::Link;
+use VMware::vCloudDirector2::Link;
 
 # ------------------------------------------------------------------------
 
 has object => (
     is            => 'ro',
-    isa           => 'VMware::vCloudDirector::Object',
+    isa           => 'VMware::vCloudDirector2::Object',
     required      => 1,
     weak_ref      => 1,
     documentation => 'Parent object'
@@ -36,7 +36,7 @@ has id   => ( is => 'ro', isa => 'Str',     predicate => 'has_id' );
 
 has links => (
     is      => 'ro',
-    isa     => 'ArrayRef[VMware::vCloudDirector::Link]',
+    isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
     lazy    => 1,
     builder => '_build_links'
 );
@@ -44,7 +44,7 @@ has links => (
 method _build_links () {
     my @links;
     if ( exists( $self->hash->{Link} ) ) {
-        push( @links, VMware::vCloudDirector::Link->new( hash => $_, object => $self->object ) )
+        push( @links, VMware::vCloudDirector2::Link->new( hash => $_, object => $self->object ) )
             foreach ( $self->_listify( $self->hash->{Link} ) );
     }
     return \@links;

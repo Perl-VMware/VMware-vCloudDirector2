@@ -1,4 +1,4 @@
-package VMware::vCloudDirector::API;
+package VMware::vCloudDirector2::API;
 
 # ABSTRACT: Module to do stuff!
 
@@ -20,8 +20,8 @@ use Path::Tiny;
 use Ref::Util qw(is_plain_hashref);
 use Scalar::Util qw(looks_like_number);
 use Syntax::Keyword::Try 0.04;    # Earlier versions throw errors
-use VMware::vCloudDirector::Error;
-use VMware::vCloudDirector::Object;
+use VMware::vCloudDirector2::Error;
+use VMware::vCloudDirector2::Object;
 use XML::Fast qw();
 use Data::Dump qw(pp);
 
@@ -157,7 +157,7 @@ method _decode_xml_response ($response) {
         return XML::Fast::xml2hash($xml);
     }
     catch {
-        VMware::vCloudDirector::Error->throw(
+        VMware::vCloudDirector2::Error->throw(
             {   message  => "XML decode failed - " . join( ' ', $@ ),
                 response => $response
             }
@@ -206,7 +206,7 @@ method _request ($method, $url, $content?, $headers?) {
     my $response;
     try { $response = $self->_ua->request($request); }
     catch {
-        VMware::vCloudDirector::Error->throw(
+        VMware::vCloudDirector2::Error->throw(
             {   message => "$method request bombed",
                 uri     => $uri,
                 request => $request,
@@ -237,7 +237,7 @@ method _request ($method, $url, $content?, $headers?) {
                 : 'Unknown after decode';
         }
         catch { $message .= 'Unknown'; }
-        VMware::vCloudDirector::Error->throw(
+        VMware::vCloudDirector2::Error->throw(
             {   message  => $message,
                 uri      => $uri,
                 request  => $request,
@@ -351,7 +351,7 @@ has authorization_token => (
 
 has current_session => (
     is        => 'ro',
-    isa       => 'VMware::vCloudDirector::Object',
+    isa       => 'VMware::vCloudDirector2::Object',
     clearer   => '_clear_current_session',
     predicate => 'has_current_session',
     lazy      => 1,
@@ -413,7 +413,7 @@ method _build_returned_objects ($response) {
             my @thing_objects;
             $self->_debug("API: building a set of [$thing_type] objects") if ( $self->debug );
             foreach my $thing ( $self->_listify( $hash->{$top_key}{$thing_type} ) ) {
-                my $object = VMware::vCloudDirector::Object->new(
+                my $object = VMware::vCloudDirector2::Object->new(
                     hash            => { $thing_type => $thing },
                     api             => $self,
                     _partial_object => 1
@@ -426,13 +426,13 @@ method _build_returned_objects ($response) {
         # was not a list of things, so just objectify the one thing here
         else {
             $self->_debug("API: building a single [$top_key] object") if ( $self->debug );
-            return VMware::vCloudDirector::Object->new( hash => $hash, api => $self );
+            return VMware::vCloudDirector2::Object->new( hash => $hash, api => $self );
         }
     }
 
     # there was an error here - so bomb out
     else {
-        VMware::vCloudDirector::Error->throw(
+        VMware::vCloudDirector2::Error->throw(
             { message => 'Error reponse passed to object builder', response => $response } );
     }
 }
@@ -516,7 +516,7 @@ has query_uri => (
 
 method _build_query_uri () {
     my @links = $self->current_session->find_links( rel => 'down', type => 'queryList' );
-    VMware::vCloudDirector::Error->throw('Cannot find single query URL')
+    VMware::vCloudDirector2::Error->throw('Cannot find single query URL')
         unless ( scalar(@links) == 1 );
     return $links[0]->href;
 }

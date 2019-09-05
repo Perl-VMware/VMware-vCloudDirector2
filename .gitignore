@@ -20,7 +20,7 @@ _build
 *.mo
 
 # avoid archives of this distribution
-VMware-vCloudDirector-*
+VMware-vCloudDirector2-*
 
 # stuff thats part of the build
 blib*
