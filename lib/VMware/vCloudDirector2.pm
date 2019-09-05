@@ -113,7 +113,8 @@ has api => (
     is      => 'ro',
     isa     => 'VMware::vCloudDirector2::API',
     lazy    => 1,
-    builder => '_build_api'
+    builder => '_build_api',
+    handles => [qw( GET PUT POST DELETE )],
 );
 
 method _build_api () {
