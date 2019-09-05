@@ -36,5 +36,7 @@ tmp
 
 # Exclude file used to set up testing holding auth data
 testauth*.sh
+debug
+test.pl
 
 # end

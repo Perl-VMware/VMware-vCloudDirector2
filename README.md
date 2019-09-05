@@ -70,6 +70,11 @@ is set to something that is non-zero.  Picked up at create time in `BUILD()`
 
 Thinish wrapper of the VMware vCloud Director REST API.
 
+This differs from [VMware::vCloudDirector](https://metacpan.org/pod/VMware::vCloudDirector) in that it uses the JSON flavoured
+version of the API, which has subtly different naming conventions (which is why
+I didn't try to make the code handle both flavours), but is much easier to work
+with when doing write operations.
+
 THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY - AND MAY CHANGE
 DRAMATICALLY OR EAT YOUR DATA.
 

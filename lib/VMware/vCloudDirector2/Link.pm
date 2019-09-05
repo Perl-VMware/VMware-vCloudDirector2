@@ -25,10 +25,11 @@ has object => (
 );
 
 has mime_type => ( is => 'ro', isa => 'Str', predicate => 'has_mime_type' );
-has href => ( is => 'ro', isa => Uri, required => 1, coerce => 1 );
+has href => ( is => 'ro', isa => Uri,   required  => 1, coerce => 1 );
 has rel  => ( is => 'ro', isa => 'Str', required  => 1 );
 has name => ( is => 'ro', isa => 'Str', predicate => 'has_name' );
 has type => ( is => 'ro', isa => 'Str' );
+has is_json => ( is => 'ro', isa => 'Bool' );
 
 # ------------------------------------------------------------------------
 around BUILDARGS => sub {
@@ -38,13 +39,16 @@ around BUILDARGS => sub {
 
     if ( $params->{hash} ) {
         my $hash = delete $params->{hash};
-        $params->{href} = $hash->{-href} if ( exists( $hash->{-href} ) );
-        $params->{rel}  = $hash->{-rel}  if ( exists( $hash->{-rel} ) );
-        $params->{name} = $hash->{-name} if ( exists( $hash->{-name} ) );
-        if ( exists( $hash->{-type} ) ) {
-            my $type = $hash->{-type};
+        $params->{href} = $hash->{href} if ( exists( $hash->{href} ) and defined( $hash->{href} ) );
+        $params->{rel}  = $hash->{rel}  if ( exists( $hash->{rel} )  and defined( $hash->{rel} ) );
+        $params->{name} = $hash->{name} if ( exists( $hash->{name} ) and defined( $hash->{name} ) );
+        if ( exists( $hash->{type} ) ) {
+            my $type = $hash->{type};
             $params->{mime_type} = $type;
-            $params->{type} = $1 if ( $type =~ m|^application/vnd\..*\.(\w+)\+xml$| );
+            if ( $type =~ m!^application/vnd\..*\.(\w+)\+(json|xml)$! ) {
+                $params->{type}    = $1;
+                $params->{is_json} = ( $2 eq 'json' ) ? 1 : 0;
+            }
         }
     }
 
@@ -60,7 +64,7 @@ generate an exception.  See L<VMware::vCloudDirector2::API/DELETE>.
 
 =cut
 
-method DELETE () { return $self->object->api->GET( $self->href ); }
+method DELETE () { return $self->object->api->DELETE( $self->href ); }
 
 =head3 GET
 
@@ -79,7 +83,7 @@ L<VMware::vCloudDirector2::API/POST>.
 
 =cut
 
-method POST ($xml_hash) { return $self->object->api->GET( $self->href, $xml_hash ); }
+method POST ($hash) { return $self->object->api->POST( $self->href, $hash, $self->mime_type ); }
 
 =head3 PUT
 
@@ -89,7 +93,7 @@ L<VMware::vCloudDirector2::API/PUT>.
 
 =cut
 
-method PUT ($xml_hash) { return $self->object->api->GET( $self->href, $xml_hash ); }
+method PUT ($hash) { return $self->object->api->PUT( $self->href, $hash, $self->mime_type ); }
 
 # ------------------------------------------------------------------------
 

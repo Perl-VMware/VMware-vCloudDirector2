@@ -39,7 +39,7 @@ inflation.
 
 =head3 id
 
-The id attribute from the returned vCloud XML.  Forces object inflation.
+The id attribute from the returned vCloud JSON.  Forces object inflation.
 
 =cut
 
@@ -233,41 +233,41 @@ method build_children_objects () {
 
 =head3 DELETE
 
-Make a delete request to the URL of this object.  Returns Objects.  Failure
-will generate an exception.  See L<VMware::vCloudDirector2::API/DELETE>.
+Make a delete request to the URL in this link.  Returns Objects.  Failure will
+generate an exception.  See L<VMware::vCloudDirector2::API/DELETE>.
 
 =cut
 
-method DELETE () { return $self->api->GET( $self->href ); }
+method DELETE () { return $self->object->api->DELETE( $self->href ); }
 
 =head3 GET
 
-Make a get request to the URL of this object.  Returns Objects.  Failure will
+Make a get request to the URL in this link.  Returns Objects.  Failure will
 generate an exception.  See L<VMware::vCloudDirector2::API/GET>.
 
 =cut
 
-method GET () { return $self->api->GET( $self->href ); }
+method GET () { return $self->object->api->GET( $self->href ); }
 
 =head3 POST
 
-Make a post request with the specified payload to the URL of this object.
-Returns Objects.  Failure will generate an exception.  See
+Make a post request with the specified payload to the URL in this link. Returns
+Objects.  Failure will generate an exception.  See
 L<VMware::vCloudDirector2::API/POST>.
 
 =cut
 
-method POST ($xml_hash) { return $self->api->GET( $self->href, $xml_hash ); }
+method POST ($hash) { return $self->object->api->POST( $self->href, $hash, $self->mime_type ); }
 
 =head3 PUT
 
-Make a put request with the specified payload to the URL of this object.
-Returns Objects.  Failure will generate an exception.  See
+Make a put request with the specified payload to the URL in this link.  Returns
+Objects.  Failure will generate an exception.  See
 L<VMware::vCloudDirector2::API/PUT>.
 
 =cut
 
-method PUT ($xml_hash) { return $self->api->GET( $self->href, $xml_hash ); }
+method PUT ($hash) { return $self->object->api->PUT( $self->href, $hash, $self->mime_type ); }
 
 # ------------------------------------------------------------------------
 method _listify ($thing) { !defined $thing ? () : ( ( ref $thing eq 'ARRAY' ) ? @{$thing} : $thing ) }

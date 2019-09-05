@@ -26,7 +26,7 @@ has object => (
 );
 
 has mime_type => ( is => 'ro', isa => 'Str', required => 1 );
-has href => ( is => 'ro', isa => Uri, required => 1, coerce => 1 );
+has href => ( is => 'ro', isa => Uri,       required  => 1, coerce => 1 );
 has type => ( is => 'ro', isa => 'Str',     required  => 1 );
 has hash => ( is => 'ro', isa => 'HashRef', required  => 1, writer => '_set_hash' );
 has name => ( is => 'ro', isa => 'Str',     predicate => 'has_name' );
@@ -40,12 +40,23 @@ has links => (
     lazy    => 1,
     builder => '_build_links'
 );
+has all_links => (
+    is      => 'ro',
+    isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
+    lazy    => 1,
+    builder => '_build_all_links'
+);
 
 method _build_links () {
+    my @links = grep { $_->is_json } @{ $self->all_links };
+    return \@links;
+}
+
+method _build_all_links () {
     my @links;
-    if ( exists( $self->hash->{Link} ) ) {
+    if ( exists( $self->hash->{link} ) ) {
         push( @links, VMware::vCloudDirector2::Link->new( hash => $_, object => $self->object ) )
-            foreach ( $self->_listify( $self->hash->{Link} ) );
+            foreach ( $self->_listify( $self->hash->{link} ) );
     }
     return \@links;
 }
@@ -69,14 +80,14 @@ around BUILDARGS => sub {
         }
         const $params->{hash} => $hash;    # force hash read-only to stop people playing
 
-        $params->{href} = $hash->{-href} if ( exists( $hash->{-href} ) );
-        $params->{rel}  = $hash->{-rel}  if ( exists( $hash->{-rel} ) );
-        $params->{name} = $hash->{-name} if ( exists( $hash->{-name} ) );
-        $params->{id}   = $hash->{-id}   if ( exists( $hash->{-id} ) );
-        if ( exists( $hash->{-type} ) ) {
-            my $type = $hash->{-type};
+        $params->{href} = $hash->{href} if ( exists( $hash->{href} ) and defined( $hash->{href} ) );
+        $params->{rel}  = $hash->{rel}  if ( exists( $hash->{rel} )  and defined( $hash->{rel} ) );
+        $params->{name} = $hash->{name} if ( exists( $hash->{name} ) and defined( $hash->{name} ) );
+        $params->{id}   = $hash->{id}   if ( exists( $hash->{id} )   and defined( $hash->{id} ) );
+        if ( exists( $hash->{type} ) ) {
+            my $type = $hash->{type};
             $params->{mime_type} = $type;
-            $params->{type} = $1 if ( $type =~ m|^application/vnd\..*\.(\w+)\+xml$| );
+            $params->{type}      = $1 if ( $type =~ m|^application/vnd\..*\.(\w+)\+json$| );
         }
     }
     return $class->$orig($params);

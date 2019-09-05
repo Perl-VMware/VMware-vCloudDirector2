@@ -11,7 +11,6 @@ use warnings;
 use Moose;
 use Method::Signatures;
 use MooseX::Types::Path::Tiny qw/Path/;
-use Path::Tiny;
 use VMware::vCloudDirector2::API;
 use VMware::vCloudDirector2::Error;
 use VMware::vCloudDirector2::Object;
@@ -21,6 +20,11 @@ use VMware::vCloudDirector2::Object;
 =head1 DESCRIPTION
 
 Thinish wrapper of the VMware vCloud Director REST API.
+
+This differs from L<VMware::vCloudDirector> in that it uses the JSON flavoured
+version of the API, which has subtly different naming conventions (which is why
+I didn't try to make the code handle both flavours), but is much easier to work
+with when doing write operations.
 
 THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY - AND MAY CHANGE
 DRAMATICALLY OR EAT YOUR DATA.

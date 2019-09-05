@@ -13,16 +13,17 @@ use Moose;
 use Method::Signatures;
 use MooseX::Types::Path::Tiny qw(Path);
 use MooseX::Types::URI qw(Uri);
+use Cpanel::JSON::XS;
 use LWP::UserAgent::Determined;
 use MIME::Base64;
 use Mozilla::CA;
 use Path::Tiny;
-use Ref::Util qw(is_plain_hashref);
+use Ref::Util qw(is_plain_hashref is_plain_arrayref);
 use Scalar::Util qw(looks_like_number);
 use Syntax::Keyword::Try 0.04;    # Earlier versions throw errors
 use VMware::vCloudDirector2::Error;
 use VMware::vCloudDirector2::Object;
-use XML::Fast qw();
+use XML::Fast qw();               # just for the versions document
 use Data::Dump qw(pp);
 
 # ------------------------------------------------------------------------
@@ -110,7 +111,7 @@ has ssl_ca_file => (
 
 method _build_ssl_ca_file () { return path( Mozilla::CA::SSL_ca_file() ); }
 method _build_base_url () { return URI->new( sprintf( 'https://%s/', $self->hostname ) ); }
-method _build_default_accept_header () { return ( 'application/*+xml;version=' . $self->api_version ); }
+method _build_default_accept_header () { return ( 'application/*+json;version=' . $self->api_version ); }
 method _debug (@parameters) { warn join( '', '# ', @parameters, "\n" ) if ( $self->debug ); }
 
 # ------------------------------------------------------------------------
@@ -150,14 +151,27 @@ method _build_ua () {
 }
 
 # ------------------------------------------------------------------------
+has _json => (
+    is      => 'ro',
+    isa     => 'Cpanel::JSON::XS',
+    lazy    => 1,
+    builder => '_build_json',
+);
+
+method _build_json () { return Cpanel::JSON::XS->new->utf8; }
+
+# ------------------------------------------------------------------------
 method _decode_xml_response ($response) {
+    VMware::vCloudDirector2::Error->throw(
+        { message => "Not a XML response as expected", response => $response } )
+        unless ( $response->content_type() =~ m|\bxml\b| );
     try {
         my $xml = $response->decoded_content;
         return unless ( defined($xml) and length($xml) );
         return XML::Fast::xml2hash($xml);
     }
     catch {
-        VMware::vCloudDirector2::Error->throw(
+        VMware::vCloudDirector::Error->throw(
             {   message  => "XML decode failed - " . join( ' ', $@ ),
                 response => $response
             }
@@ -166,8 +180,28 @@ method _decode_xml_response ($response) {
 }
 
 # ------------------------------------------------------------------------
-method _encode_xml_content ($hash) {
-    return XML::Hash::XS::hash2xml( $hash, method => 'LX' );
+method _decode_json_response ($response) {
+    VMware::vCloudDirector2::Error->throw(
+        { message => "Not a JSON response as expected", response => $response } )
+        unless ( $response->content_type() =~ m|\bjson\b| );
+
+    try {
+        my $json = $response->decoded_content;
+        return unless ( defined($json) and length($json) );
+        return $self->_json->decode($json);
+    }
+    catch {
+        VMware::vCloudDirector2::Error->throw(
+            {   message  => "JSON decode failed - " . join( ' ', $@ ),
+                response => $response
+            }
+        );
+    }
+}
+
+# ------------------------------------------------------------------------
+method _encode_json_content ($hash) {
+    return $self->_json->encode($hash);
 }
 
 # ------------------------------------------------------------------------
@@ -222,7 +256,8 @@ method _request ($method, $url, $content?, $headers?) {
             unless ( $self->_debug_trace_directory->is_dir );
         $self->_debug_trace_directory->child( sprintf( '%06d.txt', ++$xcount ) )
             ->spew( pp($response) );
-        $self->_debug_trace_directory->child( sprintf( '%06d.xml', $xcount ) )
+        my $ext = ( $response->content_type =~ /json/ ) ? 'json' : 'xml';
+        $self->_debug_trace_directory->child( sprintf( '%06d.%s', $xcount, $ext ) )
             ->spew( $response->decoded_content );
     }
 
@@ -230,7 +265,7 @@ method _request ($method, $url, $content?, $headers?) {
     if ( $response->is_error ) {
         my $message = "$method request failed [$uri] - ";
         try {
-            my $decoded_response = $self->_decode_xml_response($response);
+            my $decoded_response = $self->_decode_json_response($response);
             $message .=
                 ( exists( $decoded_response->{Error}{'-message'} ) )
                 ? $decoded_response->{Error}{'-message'}
@@ -291,7 +326,7 @@ has _raw_version_full => (
     builder => '_build_raw_version_full'
 );
 
-method _build_api_version ()  { return $self->_raw_version->{Version}; }
+method _build_api_version () { return $self->_raw_version->{Version}; }
 method _build_url_login () { return URI->new( $self->_raw_version->{LoginUrl} ); }
 
 method _build_raw_version () {
@@ -395,24 +430,24 @@ method _build_returned_objects ($response) {
     if ( $response->is_success ) {
         $self->_debug("API: building objects") if ( $self->debug );
 
-        my $hash = $self->_decode_xml_response($response);
+        my $hash = $self->_decode_json_response($response);
         unless ( defined($hash) ) {
             $self->_debug("API: returned null object") if ( $self->debug );
             return;
         }
 
-        # See if this is a list of things, in which case root element will
-        # be ThingList and it will have a set of Thing in it
-        my @top_keys   = keys %{$hash};
-        my $top_key    = $top_keys[0];
-        my $thing_type = substr( $top_key, 0, -4 );
-        if (    ( scalar(@top_keys) == 1 )
-            and ( substr( $top_key, -4, 4 ) eq 'List' )
-            and is_plain_hashref( $hash->{$top_key} )
-            and ( exists( $hash->{$top_key}{$thing_type} ) ) ) {
+        # See if this is a list of things, in which case the type element will
+        # be thingList and it will have a set of thing in it
+        my $mime_type  = $hash->{type};
+        my $type       = ( $mime_type =~ m|^application/vnd\..*\.(\w+)\+json$| ) ? $1 : $mime_type;
+        my $thing_type = ( substr( $type, -4, 4 ) eq 'List' ) ? substr( $type, 0, -4 ) : $type;
+
+        if (    ( $type ne $thing_type )
+            and ( exists( $hash->{$thing_type} ) )
+            and is_plain_arrayref( $hash->{$thing_type} ) ) {
             my @thing_objects;
             $self->_debug("API: building a set of [$thing_type] objects") if ( $self->debug );
-            foreach my $thing ( $self->_listify( $hash->{$top_key}{$thing_type} ) ) {
+            foreach my $thing ( $self->_listify( $hash->{$thing_type} ) ) {
                 my $object = VMware::vCloudDirector2::Object->new(
                     hash            => { $thing_type => $thing },
                     api             => $self,
@@ -425,7 +460,7 @@ method _build_returned_objects ($response) {
 
         # was not a list of things, so just objectify the one thing here
         else {
-            $self->_debug("API: building a single [$top_key] object") if ( $self->debug );
+            $self->_debug("API: building a single [$thing_type] object") if ( $self->debug );
             return VMware::vCloudDirector2::Object->new( hash => $hash, api => $self );
         }
     }
@@ -447,17 +482,17 @@ returning the objects that were built.
 =head3 GET_hash ($url)
 
 Forces a session establishment, and does a GET operation on the given URL,
-returning the XML equivalent hash that was built.
+returning the JSON equivalent hash that was built.
 
-=head3 PUT ($url, $xml_hash)
+=head3 PUT ($url, $hash, $content_type)
 
 Forces a session establishment, and does a PUT operation on the given URL,
-passing the XML string or encoded hash, returning the objects that were built.
+passing the JSON string or encoded hash, returning the objects that were built.
 
-=head3 POST ($url, $xml_hash)
+=head3 POST ($url, $hash, $content_type)
 
 Forces a session establishment, and does a POST operation on the given URL,
-passing the XML string or encoded hash, returning the objects that were built.
+passing the JSON string or encoded hash, returning the objects that were built.
 
 =head3 DELETE ($url)
 
@@ -475,20 +510,20 @@ method GET ($url) {
 method GET_hash ($url) {
     $self->current_session;    # ensure/force valid session in place
     my $response = $self->_request( 'GET', $url );
-    return $self->_decode_xml_response($response);
+    return $self->_decode_json_response($response);
 }
 
-method PUT ($url, $xml_hash, $content_type) {
+method PUT ($url, $hash, $content_type) {
     $self->current_session;    # ensure/force valid session in place
-    my $content  = is_plain_hashref($xml_hash) ? $self->_encode_xml_content($xml_hash) : $xml_hash;
+    my $content  = is_plain_hashref($hash) ? $self->_encode_json_content($hash) : $hash;
     my $response = $self->_request( 'PUT', $url, $content, { 'Content-Type' => $content_type } );
     return $self->_build_returned_objects($response);
 }
 
-method POST ($url, $xml_hash) {
+method POST ($url, $hash, $content_type) {
     $self->current_session;    # ensure/force valid session in place
-    my $content  = is_plain_hashref($xml_hash) ? $self->_encode_xml_content($xml_hash) : $xml_hash;
-    my $response = $self->_request( 'POST', $url, $content );
+    my $content  = is_plain_hashref($hash) ? $self->_encode_json_content($hash) : $hash;
+    my $response = $self->_request( 'POST', $url, $content, { 'Content-Type' => $content_type } );
     return $self->_build_returned_objects($response);
 }
 
