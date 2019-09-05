@@ -1,39 +1,11 @@
-Revision history for VMware-vCloudDirector
+Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+    - Converted to JSON API - quite a lot of internal hash structure
+      changes due to this.
+    - Partially converted test suite (incomplete)
+    - Fixed the fact that all of the write methods (PUT, POST, DELETE)
+      could never have worked.  At all.  Really!
+    - Initial release so can go on with this as work-in-progress
 
-0.008     2018-02-05 14:19:37+00:00 Europe/London
-    - Uses LWP::UserAgent::Determined for better error retry capability
-    - Uses proxy configuration from environment variables
-      [This should possibly be configurable]
-
-0.007     2017-08-17 11:07:41+01:00 Europe/London
-    - Slightly improved error handling - decodes vCloud response better
-
-0.006     2017-06-30 11:57:33+01:00 Europe/London
-    - Require at least version 0.04 of Syntax::Keyword::Try
-      Versions 0.02 & 0.03 caused errors in loading the module.
-
-0.005     2017-06-27 13:58:12+01:00 Europe/London
-    - More informative exception messages
-
-0.004     2017-05-04 15:24:39+01:00 Europe/London
-    - Better checking in object expansion (used to error)
-    - Bare minimum documentation before initial prototype release to CPAN
-
-0.003     2017-01-27 15:41:23+00:00 Europe/London
-    - Fix dependancies in distro
-
-0.002     2017-01-27 15:21:36+00:00 Europe/London
-    - Changed handling of version deprecation
-    - More object utility methods, eg
-        - build_sub_objects
-        - build_children_objects
-        - fetch_links
-    - URIs are generally coerced and handled better
-    - query_uri accessor to API, query method in main module
-
-
-0.001     2017-01-25 15:42:10+00:00 Europe/London
-    - Initial partial functionality release
-      This is purely to allow me to test against consumer modules.
+VMware-vCloudDirector version 0.008 cloned and reworked.

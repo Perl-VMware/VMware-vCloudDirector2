@@ -26,12 +26,14 @@ version of the API, which has subtly different naming conventions (which is why
 I didn't try to make the code handle both flavours), but is much easier to work
 with when doing write operations.
 
+It also B<can> do write operations - as well as the other issues in
+L<VMware::vCloudDirector> it looks like the write operations - C<PUT>, C<POST>
+and C<DELETE> have never worked!
+
 THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY - AND MAY CHANGE
 DRAMATICALLY OR EAT YOUR DATA.
 
-The target application is to read information from a vCloud instance, so the
-ability to change or write data to the vCloud system has not been implemented
-as yet...
+The lack of documentation reflects the stage in development...
 
 =head1 SYNOPSIS
 
@@ -87,7 +89,7 @@ Whether to do standard SSL certificate verification.  Defaults to set.
 The SSL CA set to trust packaged in a file.  This defaults to those set in the
 L<Mozilla::CA>
 
-=head2 debug
+=head3 debug
 
 Set debug level.  The higher the debug level, the more chatter is exposed.
 
@@ -136,6 +138,17 @@ method _build_api () {
 }
 
 # ------------------------------------------------------------------------
+
+=head2 Methods
+
+=head3 org_list
+
+Returns a set of L<VMware::vCloudDirector2::Object> each containing one of the
+vCloud Orgs on the system (or if using this in user mode the single org you can
+see).
+
+=cut
+
 has org_listref => (
     is      => 'ro',
     isa     => 'ArrayRef[VMware::vCloudDirector2::Object]',
@@ -151,6 +164,14 @@ has org_listref => (
 method _build_org_listref { return [ $self->api->GET('/api/org/') ]; }
 
 # ------------------------------------------------------------------------
+
+=head3 query
+
+Returns a L<VMware::vCloudDirector2::Object> containing the query result of the
+query against the platform.
+
+=cut
+
 method query (@args) {
     my $uri = $self->api->query_uri->clone;
     $uri->query_form(@args);

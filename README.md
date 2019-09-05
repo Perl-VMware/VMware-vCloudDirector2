@@ -4,7 +4,7 @@ VMware::vCloudDirector2 - Interface to VMWare vCloud Directory REST API
 
 # VERSION
 
-version 0.004
+version 0.100
 
 # SYNOPSIS
 
@@ -59,12 +59,25 @@ Whether to do standard SSL certificate verification.  Defaults to set.
 The SSL CA set to trust packaged in a file.  This defaults to those set in the
 [Mozilla::CA](https://metacpan.org/pod/Mozilla::CA)
 
-## debug
+### debug
 
 Set debug level.  The higher the debug level, the more chatter is exposed.
 
 Defaults to 0 (no output) unless the environment variable `VCLOUD_API_DEBUG`
 is set to something that is non-zero.  Picked up at create time in `BUILD()`
+
+## Methods
+
+### org\_list
+
+Returns a set of [VMware::vCloudDirector2::Object](https://metacpan.org/pod/VMware::vCloudDirector2::Object) each containing one of the
+vCloud Orgs on the system (or if using this in user mode the single org you can
+see).
+
+### query
+
+Returns a [VMware::vCloudDirector2::Object](https://metacpan.org/pod/VMware::vCloudDirector2::Object) containing the query result of the
+query against the platform.
 
 # DESCRIPTION
 
@@ -75,12 +88,14 @@ version of the API, which has subtly different naming conventions (which is why
 I didn't try to make the code handle both flavours), but is much easier to work
 with when doing write operations.
 
+It also **can** do write operations - as well as the other issues in
+[VMware::vCloudDirector](https://metacpan.org/pod/VMware::vCloudDirector) it looks like the write operations - `PUT`, `POST`
+and `DELETE` have never worked!
+
 THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY - AND MAY CHANGE
 DRAMATICALLY OR EAT YOUR DATA.
 
-The target application is to read information from a vCloud instance, so the
-ability to change or write data to the vCloud system has not been implemented
-as yet...
+The lack of documentation reflects the stage in development...
 
 # AUTHOR
 
