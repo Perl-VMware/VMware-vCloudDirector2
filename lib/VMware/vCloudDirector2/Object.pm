@@ -13,6 +13,7 @@ use Method::Signatures;
 use Ref::Util qw(is_plain_hashref);
 use Lingua::EN::Inflexion;
 use VMware::vCloudDirector2::ObjectContent;
+use VMware::vCloudDirector2::Link;
 
 # ------------------------------------------------------------------------
 
@@ -34,8 +35,14 @@ A reference to the hash returned from the vCloud API.  Forces object inflation.
 
 =head3 links
 
-An array references to the links contained in this object.  Forces object
-inflation.
+Returns L<VMware::vCloudDirector2::Link> objects for each of the JSON targetted
+links contained in this object.  Forces object inflation.
+
+=head3 all_links
+
+Returns L<VMware::vCloudDirector2::Link> objects for each of the links
+contained in this object.  Will typically return two links per thing - one to
+the XML version, one to the JSON version.  Forces object inflation.
 
 =head3 id
 
@@ -64,7 +71,6 @@ has _partial_object => ( is => 'rw', isa => 'Bool', default => 0 );
 
 # delegates that force a full object to be pulled
 method hash () { return $self->inflate->content->hash; }
-method links () { return $self->inflate->content->links; }
 method id () { return $self->inflate->content->id; }
 method uuid () { return ( split( /\//, $self->href ) )[-1]; }
 
@@ -73,6 +79,39 @@ method BUILD ($args) {
 
     $self->_set_content(
         VMware::vCloudDirector2::ObjectContent->new( object => $self, hash => $args->{hash} ) );
+}
+
+# ------------------------------------------------------------------------
+
+has _links => (
+    is      => 'ro',
+    traits  => ['Array'],
+    isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
+    lazy    => 1,
+    builder => '_build_links',
+    handles => { links => 'elements', },
+);
+has _all_links => (
+    is      => 'ro',
+    traits  => ['Array'],
+    isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
+    lazy    => 1,
+    builder => '_build_all_links',
+    handles => { all_links => 'elements', },
+);
+
+method _build_links () {
+    my @links = grep { $_->is_json } $self->all_links;
+    return \@links;
+}
+
+method _build_all_links () {
+    my @links;
+    if ( exists( $self->hash->{link} ) ) {
+        push( @links, VMware::vCloudDirector2::Link->new( hash => $_, object => $self->object ) )
+            foreach ( $self->_listify( $self->hash->{link} ) );
+    }
+    return \@links;
 }
 
 # ------------------------------------------------------------------------
@@ -141,8 +180,7 @@ The return value is a list of link objects.
 
 method find_links (:$name, :$type, :$rel) {
     my @matched_links;
-    my $links = $self->links;
-    foreach my $link ( @{$links} ) {
+    foreach my $link ( $self->links ) {
         if ( not( defined($rel) ) or ( $rel eq ( $link->rel || '' ) ) ) {
             if ( not( defined($type) ) or ( $type eq ( $link->type || '' ) ) ) {
                 if ( not( defined($name) ) or ( $name eq ( $link->name || '' ) ) ) {
@@ -179,7 +217,7 @@ method _create_object ($hash, $type='Thing') {
     my $object = VMware::vCloudDirector2::Object->new(
         hash            => { $type => $hash },
         api             => $self->api,
-        _partial_object => ( exists( $hash->{Link} ) ) ? 0 : 1,
+        _partial_object => ( exists( $hash->{link} ) ) ? 0 : 1,
     );
     $self->api->_debug(
         sprintf(

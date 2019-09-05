@@ -13,7 +13,6 @@ use Method::Signatures;
 use MooseX::Types::URI qw(Uri);
 use Const::Fast;
 use Ref::Util qw(is_plain_hashref);
-use VMware::vCloudDirector2::Link;
 
 # ------------------------------------------------------------------------
 
@@ -31,35 +30,6 @@ has type => ( is => 'ro', isa => 'Str',     required  => 1 );
 has hash => ( is => 'ro', isa => 'HashRef', required  => 1, writer => '_set_hash' );
 has name => ( is => 'ro', isa => 'Str',     predicate => 'has_name' );
 has id   => ( is => 'ro', isa => 'Str',     predicate => 'has_id' );
-
-# ------------------------------------------------------------------------
-
-has links => (
-    is      => 'ro',
-    isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
-    lazy    => 1,
-    builder => '_build_links'
-);
-has all_links => (
-    is      => 'ro',
-    isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
-    lazy    => 1,
-    builder => '_build_all_links'
-);
-
-method _build_links () {
-    my @links = grep { $_->is_json } @{ $self->all_links };
-    return \@links;
-}
-
-method _build_all_links () {
-    my @links;
-    if ( exists( $self->hash->{link} ) ) {
-        push( @links, VMware::vCloudDirector2::Link->new( hash => $_, object => $self->object ) )
-            foreach ( $self->_listify( $self->hash->{link} ) );
-    }
-    return \@links;
-}
 
 # ------------------------------------------------------------------------
 around BUILDARGS => sub {
