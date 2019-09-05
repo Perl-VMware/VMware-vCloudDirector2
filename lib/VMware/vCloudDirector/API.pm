@@ -359,7 +359,7 @@ has current_session => (
 );
 
 method _build_current_session () {
-    my $login_id = join( '@', $self->username, $self->orgname );
+    my $login_id     = join( '@', $self->username, $self->orgname );
     my $encoded_auth = 'Basic ' . MIME::Base64::encode( join( ':', $login_id, $self->password ) );
     $self->_debug("API: attempting login as: $login_id") if ( $self->debug );
     my $response =
@@ -478,17 +478,17 @@ method GET_hash ($url) {
     return $self->_decode_xml_response($response);
 }
 
-method PUT ($url, $xml_hash) {
+method PUT ($url, $xml_hash, $content_type) {
     $self->current_session;    # ensure/force valid session in place
-    my $content = is_plain_hashref($xml_hash) ? $self->_encode_xml_content($xml_hash) : $xml_hash;
-    my $response = $self->_request( 'PUT', $url );
+    my $content  = is_plain_hashref($xml_hash) ? $self->_encode_xml_content($xml_hash) : $xml_hash;
+    my $response = $self->_request( 'PUT', $url, $content, { 'Content-Type' => $content_type } );
     return $self->_build_returned_objects($response);
 }
 
 method POST ($url, $xml_hash) {
     $self->current_session;    # ensure/force valid session in place
-    my $content = is_plain_hashref($xml_hash) ? $self->_encode_xml_content($xml_hash) : $xml_hash;
-    my $response = $self->_request( 'POST', $url );
+    my $content  = is_plain_hashref($xml_hash) ? $self->_encode_xml_content($xml_hash) : $xml_hash;
+    my $response = $self->_request( 'POST', $url, $content );
     return $self->_build_returned_objects($response);
 }
 
