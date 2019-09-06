@@ -449,7 +449,7 @@ method _build_returned_objects ($response) {
             $self->_debug("API: building a set of [$thing_type] objects") if ( $self->debug );
             foreach my $thing ( $self->_listify( $hash->{$thing_type} ) ) {
                 my $object = VMware::vCloudDirector2::Object->new(
-                    hash            => { $thing_type => $thing },
+                    hash            => $thing,
                     api             => $self,
                     _partial_object => 1
                 );

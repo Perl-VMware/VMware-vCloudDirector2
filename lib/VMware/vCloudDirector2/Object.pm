@@ -10,9 +10,9 @@ use warnings;
 
 use Moose;
 use Method::Signatures;
-use Ref::Util qw(is_plain_hashref);
-use Lingua::EN::Inflexion;
-use VMware::vCloudDirector2::ObjectContent;
+use MooseX::Types::URI qw(Uri);
+use Const::Fast;
+use Ref::Util qw(is_plain_hashref is_plain_arrayref);
 use VMware::vCloudDirector2::Link;
 use VMware::vCloudDirector2::Error;
 
@@ -59,27 +59,94 @@ has api => (
     documentation => 'API we use'
 );
 
-has content => (
-    is            => 'ro',
-    isa           => 'VMware::vCloudDirector2::ObjectContent',
-    predicate     => 'has_content',
-    writer        => '_set_content',
-    documentation => 'The underlying content object',
-    handles       => [qw( mime_type href type name )],
-);
+has mime_type => ( is => 'ro', isa => 'Str', required => 1 );
+has href => ( is => 'ro', isa => Uri,   required => 1, coerce => 1 );
+has type => ( is => 'ro', isa => 'Str', required => 1 );
+has uuid => ( is => 'ro', isa => 'Str', builder  => '_build_uuid', lazy => 1 );
+has name =>
+    ( is => 'ro', isa => 'Str', predicate => 'has_name', lazy => 1, builder => '_build_name' );
+has id => ( is => 'ro', isa => 'Str', predicate => 'has_id', lazy => 1, builder => '_build_id' );
 
 has _partial_object => ( is => 'rw', isa => 'Bool', default => 0 );
-
-# delegates that force a full object to be pulled
-method hash () { return $self->inflate->content->hash; }
-method id () { return $self->inflate->content->id; }
-method uuid () { return ( split( /\//, $self->href ) )[-1]; }
+has is_json         => ( is => 'rw', isa => 'Bool', default => 0 );
 
 # ------------------------------------------------------------------------
-method BUILD ($args) {
+around BUILDARGS => sub {
+    my ( $orig, $class, $first, @rest ) = @_;
 
-    $self->_set_content(
-        VMware::vCloudDirector2::ObjectContent->new( object => $self, hash => $args->{hash} ) );
+    my $params = is_plain_hashref($first) ? $first : { $first, @rest };
+    if ( $params->{hash} ) {
+        my $hash = $params->{hash};
+
+        # copy elements into object attributes
+        foreach (qw[href name id]) {
+            $params->{$_} = $hash->{$_} if ( exists( $hash->{$_} ) and defined( $hash->{$_} ) );
+        }
+
+        # set the object type and mime_type
+        if ( exists( $hash->{type} ) ) {
+            $params->{mime_type} = $hash->{type};
+            $params->{type}      = $1
+                if ( $hash->{type} =~ m!^application/vnd\..*\.(\w+)\+(json|xml)$! );
+            $params->{is_json} = ( $2 eq 'json' ) ? 1 : 0;
+        }
+
+        # if this has a links section it is a complete object, otherwise its partial
+        if ( exists( $hash->{link} ) ) {
+            $params->{_partial_object} = 0;
+            const $params->{hash} => $hash;    # force hash read-only to stop people playing
+        }
+        else {
+            $params->{_partial_object} = 1;
+            delete( $params->{hash} );         # do not populate the hash in the partial object
+        }
+    }
+    else {
+        # no hash so this must be a partial object
+        $params->{_partial_object} = 1;
+    }
+    return $class->$orig($params);
+};
+
+# ------------------------------------------------------------------------
+has hash => (
+    is      => 'ro',
+    traits  => ['Hash'],
+    isa     => 'HashRef',
+    builder => '_build_hash',
+    clearer => '_clear_hash',
+    lazy    => 1,
+    handles => { get_hash_item => 'get', exists_hash_item => 'exists', }
+);
+
+method _build_hash () {
+
+    # fetch object content
+    const my $hash => $self->api->GET_hash( $self->href );
+    $self->api->_debug(
+        sprintf(
+            'Object: %s a [%s]',
+            ( $self->_partial_object ? 'Inflated' : 'Refetched' ),
+            $self->type
+        )
+    ) if ( $self->api->debug );
+
+    # mark as being a whole object
+    $self->_partial_object(0);
+
+    return $hash;
+}
+
+method _build_name () { return $self->get_hash_item('name'); }
+method _build_id () { return $self->get_hash_item('id'); }
+
+method _build_uuid () {
+
+    # The UUID is in the href - return the first match
+    my $path = lc( $self->href->path() );
+    return $1
+        if ( $path =~ m|\b([0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12})\b| );
+    return;
 }
 
 # ------------------------------------------------------------------------
@@ -156,17 +223,12 @@ method inflate () {
 
 # ------------------------------------------------------------------------
 method refetch () {
-    my $hash = $self->api->GET_hash( $self->href );
-    $self->_set_content(
-        VMware::vCloudDirector2::ObjectContent->new( object => $self, hash => $hash ) );
-    $self->api->_debug(
-        sprintf(
-            'Object: %s a [%s]',
-            ( $self->_partial_object ? 'Inflated' : 'Refetched' ),
-            $self->type
-        )
-    ) if ( $self->api->debug );
-    $self->_partial_object(0);
+
+    # simplest way to force the object to be refetched is to clear the hash
+    # and then request it which forces a lazy eval
+    $self->_clear_hash;
+    $self->hash;
+
     return $self;
 }
 
@@ -259,7 +321,7 @@ method _create_object ($hash, $type='Thing') {
     # if thing has Link content within it then it is a full object, otherwise it
     # is just a stub
     my $object = VMware::vCloudDirector2::Object->new(
-        hash            => { $type => $hash },
+        hash            => $hash,
         api             => $self->api,
         _partial_object => ( exists( $hash->{link} ) ) ? 0 : 1,
     );
@@ -281,19 +343,13 @@ Given a type (specifically a key used within the current object hash), grabs
 the descendants of that key and instantiates them as partial objects (they can
 then be inflated into full objects).
 
-Due to the structure of the XML there will always be two layers, the inner
-named singular thing, and the outer named as the plural of thing.  Hence this
-does magic with the language inflection module.
-
 =cut
 
 method build_sub_objects ($type) {
     my @objects;
-    my $container_type = noun($type)->plural;
-    return
-        unless ( exists( $self->hash->{$container_type} )
-        and is_plain_hashref( $self->hash->{$container_type} ) );
-    foreach my $thing ( $self->_listify( $self->hash->{$container_type}{$type} ) ) {
+
+    return unless ( exists( $self->hash->{$type} ) );
+    foreach my $thing ( $self->_listify( $self->hash->{$type} ) ) {
         push( @objects, $self->_create_object( $thing, $type ) );
     }
     return @objects;
@@ -301,10 +357,10 @@ method build_sub_objects ($type) {
 
 method build_children_objects () {
     my $hash = $self->hash;
-    return unless ( exists( $hash->{Children} ) and is_plain_hashref( $hash->{Children} ) );
+    return unless ( exists( $hash->{children} ) and is_plain_hashref( $hash->{children} ) );
     my @objects;
-    foreach my $key ( keys %{ $hash->{Children} } ) {
-        foreach my $thing ( $self->_listify( $self->hash->{Children}{$key} ) ) {
+    foreach my $key ( keys %{ $hash->{children} } ) {
+        foreach my $thing ( $self->_listify( $self->hash->{children}{$key} ) ) {
             push( @objects, $self->_create_object( $thing, $key ) );
         }
     }
