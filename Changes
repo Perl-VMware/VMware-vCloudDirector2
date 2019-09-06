@@ -1,6 +1,8 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+
+0.101     2019-09-06 15:48:38+01:00 Europe/London
 	- Move links up to Object level and return lists rather than references
 	- Add Object attribute to the Error object
 	- Fixed bug in link fetching
