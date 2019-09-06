@@ -42,7 +42,7 @@ around BUILDARGS => sub {
         $params->{href} = $hash->{href} if ( exists( $hash->{href} ) and defined( $hash->{href} ) );
         $params->{rel}  = $hash->{rel}  if ( exists( $hash->{rel} )  and defined( $hash->{rel} ) );
         $params->{name} = $hash->{name} if ( exists( $hash->{name} ) and defined( $hash->{name} ) );
-        if ( exists( $hash->{type} ) ) {
+        if ( exists( $hash->{type} ) and defined( $hash->{type} ) ) {
             my $type = $hash->{type};
             $params->{mime_type} = $type;
             if ( $type =~ m!^application/vnd\..*\.(\w+)\+(json|xml)$! ) {

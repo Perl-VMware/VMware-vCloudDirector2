@@ -1,6 +1,7 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+	- Links may have a null or missing type (ie delete links)
 
 0.101     2019-09-06 15:48:38+01:00 Europe/London
 	- Move links up to Object level and return lists rather than references
