@@ -14,6 +14,7 @@ use Ref::Util qw(is_plain_hashref);
 use Lingua::EN::Inflexion;
 use VMware::vCloudDirector2::ObjectContent;
 use VMware::vCloudDirector2::Link;
+use VMware::vCloudDirector2::Error;
 
 # ------------------------------------------------------------------------
 
@@ -108,7 +109,7 @@ method _build_links () {
 method _build_all_links () {
     my @links;
     if ( exists( $self->hash->{link} ) ) {
-        push( @links, VMware::vCloudDirector2::Link->new( hash => $_, object => $self->object ) )
+        push( @links, VMware::vCloudDirector2::Link->new( hash => $_, object => $self ) )
             foreach ( $self->_listify( $self->hash->{link} ) );
     }
     return \@links;
@@ -190,6 +191,31 @@ method find_links (:$name, :$type, :$rel) {
         }
     }
     return @matched_links;
+}
+
+# ------------------------------------------------------------------------
+
+=head3 find_link
+
+Finds and returns one link that matches the search criteria, exactly as
+L<find_links>, except that if no links are found an exception is thrown.  If
+multiple links match then the first one returned (normally the first one back
+from the API) would be returned.
+
+The return value is a single link object.
+
+=cut
+
+method find_link (@criteria) {
+    my @matched_links = $self->find_links(@criteria);
+    unless ( scalar(@matched_links) ) {
+        VMware::vCloudDirector2::Error->throw(
+            {   message => sprintf( "No links matching criteria: %s", join( ', ', @criteria ) ),
+                object  => $self
+            }
+        );
+    }
+    return $matched_links[0];
 }
 
 # ------------------------------------------------------------------------
