@@ -117,6 +117,24 @@ method _build_all_links () {
 
 # ------------------------------------------------------------------------
 
+=head3 is_admin_object
+
+This determines, based on the href path, whether or not this is an admin
+object.
+
+=cut
+
+has is_admin_object => (
+    is            => 'ro',
+    isa           => 'Bool',
+    lazy          => 1,
+    builder       => '_build_is_admin_object',
+    documentation => 'Is this an admin level object?',
+);
+method _build_is_admin_object () { return ( $self->href->path() =~ m|/api/admin/| ) ? 1 : 0; }
+
+# ------------------------------------------------------------------------
+
 =head2 Methods
 
 =head3 inflate
@@ -332,6 +350,31 @@ L<VMware::vCloudDirector2::API/PUT>.
 =cut
 
 method PUT ($hash) { return $self->api->PUT( $self->href, $hash, $self->mime_type ); }
+
+# ------------------------------------------------------------------------
+
+=head3 fetch_admin_object
+
+If this is already an admin object (ie C<is_admin_object> is true), then this
+object is returned.
+
+Otherwise, the path is modified to point to the admin API object and the object
+is fetched.  Since this only exists for a subset of objects there is a
+reasonable chance that just attempting this will lead to an exception  being
+thrown due to a non-existant object being requested.
+
+=cut
+
+method fetch_admin_object ($subpath?) {
+    if ( $self->is_admin_object ) {
+        return $self;
+    }
+    else {
+        my $path = join( '/', '/api/admin', $self->type, $self->uuid );
+        $path .= '/' . $subpath if ( defined($subpath) );
+        return $self->api->GET($path);
+    }
+}
 
 # ------------------------------------------------------------------------
 method _listify ($thing) { !defined $thing ? () : ( ( ref $thing eq 'ARRAY' ) ? @{$thing} : $thing ) }

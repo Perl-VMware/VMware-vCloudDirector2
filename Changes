@@ -5,6 +5,7 @@ Revision history for VMware-vCloudDirector2
 	- Add Object attribute to the Error object
 	- Fixed bug in link fetching
 	- Added a find_link method that returns one matching link or throws error
+	- Mechanism to get admin object for a standard object
 
 0.100     2019-09-05 16:12:29+01:00 Europe/London
     - Converted to JSON API - quite a lot of internal hash structure
