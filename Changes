@@ -2,6 +2,7 @@ Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
 	- Move links up to Object level and return lists rather than references
+	- Add Object attribute to the Error object
 
 0.100     2019-09-05 16:12:29+01:00 Europe/London
     - Converted to JSON API - quite a lot of internal hash structure
