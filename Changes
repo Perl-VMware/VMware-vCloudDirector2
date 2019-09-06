@@ -1,6 +1,8 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+
+0.102     2019-09-06 16:47:38+01:00 Europe/London
 	- Links may have a null or missing type (ie delete links)
 
 0.101     2019-09-06 15:48:38+01:00 Europe/London
