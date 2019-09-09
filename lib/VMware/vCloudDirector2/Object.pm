@@ -422,7 +422,7 @@ thrown due to a non-existant object being requested.
 =cut
 
 method fetch_admin_object ($subpath?) {
-    if ( $self->is_admin_object ) {
+    if ( $self->is_admin_object and not( defined($subpath) ) ) {
         return $self;
     }
     else {

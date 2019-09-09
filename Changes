@@ -1,6 +1,7 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+	- Ensured that fetch_admin_object works correctly
 
 0.102     2019-09-06 16:47:38+01:00 Europe/London
 	- Links may have a null or missing type (ie delete links)
