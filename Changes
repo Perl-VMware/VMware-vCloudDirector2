@@ -2,6 +2,7 @@ Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
 	- Give more clues when there is an error returned
+	- Improve path generation for admin objects
 
 0.103     2019-09-09 14:33:32+01:00 Europe/London
 	- Ensured that fetch_admin_object works correctly

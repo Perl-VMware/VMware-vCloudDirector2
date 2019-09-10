@@ -426,7 +426,9 @@ method fetch_admin_object ($subpath?) {
         return $self;
     }
     else {
-        my $path = join( '/', '/api/admin', $self->type, $self->uuid );
+        my $uri  = $self->href;
+        my $path = $uri->path;
+        $path =~ s|^/api/|api/admin/|;
         $path .= '/' . $subpath if ( defined($subpath) );
         return $self->api->GET($path);
     }
