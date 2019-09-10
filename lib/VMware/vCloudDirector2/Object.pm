@@ -157,6 +157,7 @@ has _links => (
     isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
     lazy    => 1,
     builder => '_build_links',
+    clearer => '_clear_links',
     handles => { links => 'elements', },
 );
 has _all_links => (
@@ -165,6 +166,7 @@ has _all_links => (
     isa     => 'ArrayRef[VMware::vCloudDirector2::Link]',
     lazy    => 1,
     builder => '_build_all_links',
+    clearer => '_clear_all_links',
     handles => { all_links => 'elements', },
 );
 
@@ -227,6 +229,8 @@ method refetch () {
     # simplest way to force the object to be refetched is to clear the hash
     # and then request it which forces a lazy eval
     $self->_clear_hash;
+    $self->_clear_links;
+    $self->_clear_all_links;
     $self->hash;
 
     return $self;
