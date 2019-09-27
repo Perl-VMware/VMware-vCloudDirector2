@@ -1,6 +1,7 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+	- Sometimes objects are returned without a type field!
 
 0.104     2019-09-10 17:17:11+01:00 Europe/London
 	- Give more clues when there is an error returned
