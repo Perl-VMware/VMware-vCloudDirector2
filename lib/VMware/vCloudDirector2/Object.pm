@@ -387,9 +387,15 @@ method DELETE () { return $self->api->DELETE( $self->href ); }
 Make a get request to the URL in this link.  Returns Objects.  Failure will
 generate an exception.  See L<VMware::vCloudDirector2::API/GET>.
 
+=head3 GET_hash
+
+Make a get request to the URL in this link.  Returns a decoded hash.  Failure
+will generate an exception.  See L<VMware::vCloudDirector2::API/GET_hash>.
+
 =cut
 
 method GET () { return $self->api->GET( $self->href ); }
+method GET_hash () { return $self->api->GET_hash( $self->href ); }
 
 =head3 POST
 
