@@ -158,7 +158,7 @@ has _json => (
     builder => '_build_json',
 );
 
-method _build_json () { return Cpanel::JSON::XS->new->utf8; }
+method _build_json () { return Cpanel::JSON::XS->new->utf8->allow_blessed->convert_blessed; }
 
 # ------------------------------------------------------------------------
 method _decode_xml_response ($response) {
