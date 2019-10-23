@@ -1,6 +1,8 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+
+0.105     2019-10-23 15:57:47+01:00 Europe/London
 	- Convert blessed objects as we create JSON documents
 	- Add GET_hash method to Objects and Links
 	- Sometimes objects are returned without a type field!
