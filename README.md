@@ -11,7 +11,7 @@ VMware::vCloudDirector2 - Interface to VMWare vCloud Directory REST API
 
 # VERSION
 
-version 0.104
+version 0.105
 
 # SYNOPSIS
 
@@ -64,7 +64,7 @@ Whether to do standard SSL certificate verification.  Defaults to set.
 ### ssl\_ca\_file
 
 The SSL CA set to trust packaged in a file.  This defaults to those set in the
-[Mozilla::CA](https://metacpan.org/pod/Mozilla::CA)
+[Mozilla::CA](https://metacpan.org/pod/Mozilla%3A%3ACA)
 
 ### debug
 
@@ -77,26 +77,26 @@ is set to something that is non-zero.  Picked up at create time in `BUILD()`
 
 ### org\_list
 
-Returns a set of [VMware::vCloudDirector2::Object](https://metacpan.org/pod/VMware::vCloudDirector2::Object) each containing one of the
+Returns a set of [VMware::vCloudDirector2::Object](https://metacpan.org/pod/VMware%3A%3AvCloudDirector2%3A%3AObject) each containing one of the
 vCloud Orgs on the system (or if using this in user mode the single org you can
 see).
 
 ### query
 
-Returns a [VMware::vCloudDirector2::Object](https://metacpan.org/pod/VMware::vCloudDirector2::Object) containing the query result of the
+Returns a [VMware::vCloudDirector2::Object](https://metacpan.org/pod/VMware%3A%3AvCloudDirector2%3A%3AObject) containing the query result of the
 query against the platform.
 
 # DESCRIPTION
 
 Thinish wrapper of the VMware vCloud Director REST API.
 
-This differs from [VMware::vCloudDirector](https://metacpan.org/pod/VMware::vCloudDirector) in that it uses the JSON flavoured
+This differs from [VMware::vCloudDirector](https://metacpan.org/pod/VMware%3A%3AvCloudDirector) in that it uses the JSON flavoured
 version of the API, which has subtly different naming conventions (which is why
 I didn't try to make the code handle both flavours), but is much easier to work
 with when doing write operations.
 
 It also **can** do write operations - as well as the other issues in
-[VMware::vCloudDirector](https://metacpan.org/pod/VMware::vCloudDirector) it looks like the write operations - `PUT`, `POST`
+[VMware::vCloudDirector](https://metacpan.org/pod/VMware%3A%3AvCloudDirector) it looks like the write operations - `PUT`, `POST`
 and `DELETE` have never worked!
 
 THIS IS AT AN EARLY STAGE OF DEVELOPMENT - PROTOTYPING REALLY - AND MAY CHANGE
