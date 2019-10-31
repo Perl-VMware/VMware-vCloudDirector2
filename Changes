@@ -1,6 +1,8 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+
+0.106     2019-10-31 16:42:24+00:00 Europe/London
 	- Added additional methods for building objects from
 	  lists of things within an object - see build_sub_sub_objects
 	  (and vCloud has several inconsistant ways of packaging these).
