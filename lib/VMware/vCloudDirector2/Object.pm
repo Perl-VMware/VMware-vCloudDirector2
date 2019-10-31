@@ -347,6 +347,16 @@ Given a type (specifically a key used within the current object hash), grabs
 the descendants of that key and instantiates them as partial objects (they can
 then be inflated into full objects).
 
+=head3 build_sub_sub_objects
+
+Similar to L<build_sub_objects>, but builds objects from two levels down.
+
+
+=head3 build_children_objects
+
+Similar to L<build_sub_objects>, but builds objects from within a children hash
+
+
 =cut
 
 method build_sub_objects ($type) {
@@ -355,6 +365,17 @@ method build_sub_objects ($type) {
     return unless ( exists( $self->hash->{$type} ) );
     foreach my $thing ( $self->_listify( $self->hash->{$type} ) ) {
         push( @objects, $self->_create_object( $thing, $type ) );
+    }
+    return @objects;
+}
+
+method build_sub_sub_objects ($type, $subtype) {
+    my @objects;
+
+    return unless ( exists( $self->hash->{$type} ) and is_plain_hashref( $self->hash->{$type} ) );
+    return unless ( exists( $self->hash->{$type}{$subtype} ) );
+    foreach my $thing ( $self->_listify( $self->hash->{$type}{$subtype} ) ) {
+        push( @objects, $self->_create_object( $thing, $subtype ) );
     }
     return @objects;
 }
