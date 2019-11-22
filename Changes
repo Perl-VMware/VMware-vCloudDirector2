@@ -2,6 +2,7 @@ Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
 	- Add a fetch_link just like find_link
+	- Inject href into objects that have this missing
 
 0.106     2019-10-31 16:42:24+00:00 Europe/London
 	- Added additional methods for building objects from

@@ -472,7 +472,11 @@ method _build_returned_objects ($response) {
         # was not a list of things, so just objectify the one thing here
         else {
             $self->_debug("API: building a single [$thing_type] object") if ( $self->debug );
-            return VMware::vCloudDirector2::Object->new( hash => $hash, api => $self );
+            return VMware::vCloudDirector2::Object->new(
+                hash => $hash,
+                api  => $self,
+                href => $response->request->uri,
+            );
         }
     }
 
