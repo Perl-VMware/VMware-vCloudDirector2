@@ -288,6 +288,11 @@ from the API) would be returned.
 
 The return value is a single link object.
 
+=head3 fetch_link
+
+As per L</find_link> except that the link found is fetched and expanded up as
+an object.
+
 =cut
 
 method find_link (@criteria) {
@@ -301,6 +306,7 @@ method find_link (@criteria) {
     }
     return $matched_links[0];
 }
+method fetch_link (@search_items) { return $self->find_link(@search_items)->GET(); }
 
 # ------------------------------------------------------------------------
 
