@@ -80,7 +80,7 @@ has password   => ( is => 'ro', isa => 'Str',  required => 1 );
 has orgname    => ( is => 'ro', isa => 'Str',  required => 1, default => 'System' );
 has ssl_verify => ( is => 'ro', isa => 'Bool', default  => 1 );
 has debug      => ( is => 'rw', isa => 'Int',  default  => 0, );
-has timeout => ( is => 'rw', isa => 'Int', default => 120 );    # Defaults to 120 seconds
+has timeout    => ( is => 'rw', isa => 'Int',  default  => 120 );    # Defaults to 120 seconds
 has _debug_trace_directory =>
     ( is => 'ro', isa => Path, coerce => 1, predicate => '_has_debug_trace_directory' );
 
@@ -111,7 +111,10 @@ has ssl_ca_file => (
 
 method _build_ssl_ca_file () { return path( Mozilla::CA::SSL_ca_file() ); }
 method _build_base_url () { return URI->new( sprintf( 'https://%s/', $self->hostname ) ); }
-method _build_default_accept_header () { return ( 'application/*+json;version=' . $self->api_version ); }
+
+method _build_default_accept_header () {
+    return ( 'application/*+json;version=' . $self->api_version );
+}
 method _debug (@parameters) { warn join( '', '# ', @parameters, "\n" ) if ( $self->debug ); }
 
 # ------------------------------------------------------------------------
@@ -317,6 +320,13 @@ has _url_login => (
     clearer => '_clear_url_login',
     builder => '_build_url_login'
 );
+has _url_provider_login => (
+    is      => 'rw',
+    isa     => Uri,
+    lazy    => 1,
+    clearer => '_clear_url_provider_login',
+    builder => '_build_url_provider_login'
+);
 has _raw_version => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -334,6 +344,10 @@ has _raw_version_full => (
 
 method _build_api_version () { return $self->_raw_version->{Version}; }
 method _build_url_login () { return URI->new( $self->_raw_version->{LoginUrl} ); }
+
+method _build_url_provider_login () {
+    return URI->new( $self->_raw_version->{ProviderLoginUrl} || $self->_raw_version->{LoginUrl} );
+}
 
 method _build_raw_version () {
     my $hash    = $self->_raw_version_full;
@@ -392,7 +406,7 @@ has authorization_token => (
 
 has current_session => (
     is        => 'ro',
-    isa       => 'VMware::vCloudDirector2::Object',
+    isa       => 'Ref',
     clearer   => '_clear_current_session',
     predicate => 'has_current_session',
     lazy      => 1,
@@ -403,18 +417,33 @@ method _build_current_session () {
     my $login_id     = join( '@', $self->username, $self->orgname );
     my $encoded_auth = 'Basic ' . MIME::Base64::encode( join( ':', $login_id, $self->password ) );
     $self->_debug("API: attempting login as: $login_id") if ( $self->debug );
-    my $response =
-        $self->_request( 'POST', $self->_url_login, undef, { Authorization => $encoded_auth } );
+    my $url = ( $self->orgname eq 'System' ) ? $self->_url_provider_login : $self->_url_login;
+    my $session;
+    my $token;
+    if ( $url =~ m|/cloudapi/| ) {
+        my $response = $self->_request(
+            'POST', $url, undef,
+            {   Authorization => $encoded_auth,
+                Accept        => sprintf( "application/json;version=%s", $self->api_version )
+            }
+        );
+        $session = $self->_decode_json_response($response);
+        $token   = $session->{id};
+        $token =~ s/.*://;
+        $token =~ tr/-//d;
+    }
+    else {
+        my $response = $self->_request( 'POST', $url, undef, { Authorization => $encoded_auth } );
+        $token = $response->header('x-vcloud-authorization');
+        ($session) = $self->_build_returned_objects($response);
+    }
 
-    # if we got here then it succeeded, since we throw on failure
-    my $token = $response->header('x-vcloud-authorization');
     $self->_set_authorization_token($token);
     $self->_debug("API: authentication token: $token") if ( $self->debug );
 
     # we also reset the base url to match the login URL
     ## $self->_set_base_url( $self->_url_login->clone->path('') );
 
-    my ($session) = $self->_build_returned_objects($response);
     return $session;
 }
 
@@ -450,7 +479,7 @@ method _build_returned_objects ($response) {
             $mime_type =~ s/;.*//;
             $hash->{type} = $mime_type;
         }
-        my $type = ( $mime_type =~ m|^application/vnd\..*\.(\w+)\+json$| ) ? $1 : $mime_type;
+        my $type       = ( $mime_type =~ m|^application/vnd\..*\.(\w+)\+json$| ) ? $1  : $mime_type;
         my $thing_type = ( substr( $type, -4, 4 ) eq 'List' ) ? substr( $type, 0, -4 ) : $type;
 
         if (    ( $type ne $thing_type )
@@ -588,6 +617,7 @@ method _clear_api_data () {
     $self->_clear_ua;
     $self->_clear_api_version;
     $self->_clear_url_login;
+    $self->_clear_url_provider_login;
     $self->_clear_raw_version;
     $self->_clear_raw_version_full;
     $self->_clear_authorization_token;

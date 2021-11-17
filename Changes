@@ -1,6 +1,8 @@
 Revision history for VMware-vCloudDirector2
 
 {{$NEXT}}
+  - Minimal changes to make work with newer vCloud versions
+    authentication changes.
 
 0.107     2019-11-22 17:10:59+00:00 Europe/London
 	- Add a fetch_link just like find_link
